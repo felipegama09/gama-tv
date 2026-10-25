@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0A0B0E;
+    color: #FFFFFF;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    user-select: none;
+  }
+}
+
+/* Ocultar barras de rolagem mantendo rolagem funcional em Smart TVs e Web */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Foco visível para navegação via D-Pad / Controle Remoto (10-foot UI) */
+.tv-focusable:focus-visible {
+  outline: 2px solid #E50914;
+  outline-offset: 2px;
+  box-shadow: 0 0 18px rgba(229, 9, 20, 0.65);
+}
