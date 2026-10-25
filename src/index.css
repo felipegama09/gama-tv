@@ -11,7 +11,6 @@
   }
 }
 
-/* Ocultar barras de rolagem mantendo rolagem funcional em Smart TVs e Web */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -20,7 +19,6 @@
   scrollbar-width: none;
 }
 
-/* Foco visível para navegação via D-Pad / Controle Remoto (10-foot UI) */
 .tv-focusable:focus-visible {
   outline: 2px solid #E50914;
   outline-offset: 2px;

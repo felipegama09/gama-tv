@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/gama-tv/', // Adicionado para o GitHub Pages
   server: {
     port: 3000,
     host: true

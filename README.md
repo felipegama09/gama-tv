@@ -1,42 +1,19 @@
-# 📺 GAMA TV — Plataforma IPTV, VOD & Streaming (10-Foot UI)
+# 📺 GAMA TV — Aplicativo Android (APK)
 
-Interface de alta performance construída com **React 18 + Vite + Tailwind CSS + HLS.js**, projetada sob medida para Smart TVs (Android TV, Samsung Tizen, LG WebOS) e navegadores Widescreen.
+Projeto refatorado para compilar automaticamente um arquivo **.apk** instalável para Android TV via GitHub Actions, utilizando **Capacitor**.
 
-## 📂 Estrutura de Pastas
+## 🚀 Como gerar o APK pelo GitHub
 
-```text
-gama-tv/
-├── .gitignore
-├── index.html
-├── package.json
-├── postcss.config.js
-├── README.md
-├── tailwind.config.js
-├── vite.config.js
-└── src/
-    ├── App.jsx
-    ├── index.css
-    ├── main.jsx
-    ├── components/
-    │   ├── CategoryBar.jsx
-    │   ├── GamaLogo.jsx
-    │   ├── HeroBanner.jsx
-    │   ├── LiveTvEpgWidget.jsx
-    │   ├── MediaRow.jsx
-    │   ├── Navbar.jsx
-    │   └── VideoPlayerModal.jsx
-    └── data/
-        └── mockData.js
+1. Arraste todos esses arquivos para a raiz do seu projeto no **github.dev**.
+2. Faça o commit (`Ctrl + Shift + G`).
+3. Vá para a aba **Actions** no repositório do GitHub.
+4. Você verá um workflow chamado **Build Android APK** rodando. Ele irá baixar o Java, o Android SDK, integrar seu código web com o Capacitor e compilar o app.
+5. Quando terminar, role até a parte inferior do resumo da execução na aba Actions e baixe o artefato **`gama-tv-apk`**. O arquivo `app-debug.apk` estará lá dentro.
+
+## 📺 Como instalar na TV (via PowerShell)
+
+Com o arquivo baixado no seu PC, abra o PowerShell e conecte-se à TV:
+```bash
+adb connect 192.168.18.5
+adb install caminho/para/o/app-debug.apk
 ```
-
-## 🚀 Como importar diretamente no GitHub Dev (`github.dev`)
-
-1. Extraia o arquivo **`gama-tv-projeto-completo.zip`** no seu computador.
-2. Abra o seu repositório no **github.dev** (pressionando a tecla `.` no repositório do GitHub).
-3. Arraste toda a estrutura extraída (arquivos da raiz e a pasta `src`) diretamente para a barra lateral **Explorer** do GitHub Dev. O editor criará automaticamente todas as subpastas (`src/components`, `src/data`) nos locais corretos!
-4. Faça o commit das alterações pelo ícone de Controle de Código-Fonte (`Ctrl+Shift+G`).
-5. Para rodar o projeto em nuvem (Codespaces) ou localmente:
-   ```bash
-   npm install
-   npm run dev
-   ```
