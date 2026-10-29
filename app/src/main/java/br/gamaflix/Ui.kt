@@ -29,8 +29,7 @@ object Ui {
             }
         }
         a.findViewById<TextView>(R.id.navSearch).setOnClickListener {
-            if (a is MainActivity) a.askSearch()
-            else go(a, MainActivity::class.java, Kind.MOVIE, search = true)
+            if (selected != R.id.navSearch) go(a, SearchActivity::class.java)
         }
         a.findViewById<TextView>(R.id.navHome).setOnClickListener {
             if (a is HomeActivity) a.findViewById<RecyclerView>(R.id.rvRows).smoothScrollToPosition(0)

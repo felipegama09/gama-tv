@@ -65,10 +65,17 @@ class ItemAdapter(
 ) : RecyclerView.Adapter<ItemAdapter.VH>() {
 
     var kind: Kind = Kind.LIVE
+    /** Largura de cada coluna da grade, em pixels (0 = ainda não medida). */
+    private var cellPx = 0
     private var data: List<Item> = emptyList()
 
     fun set(d: List<Item>) {
         data = d
+        notifyDataSetChanged()
+    }
+
+    fun setCell(px: Int) {
+        cellPx = px
         notifyDataSetChanged()
     }
 
@@ -87,7 +94,12 @@ class ItemAdapter(
         val d = h.itemView.resources.displayMetrics.density
         val live = kind == Kind.LIVE
         h.title.text = item.name
-        h.img.layoutParams.height = ((if (live) 78 else 178) * d).toInt()
+        // Capa proporcional à coluna (margens do cartão descontadas); proporção 2:3.
+        h.img.layoutParams.height = when {
+            live -> (78 * d).toInt()
+            cellPx > 0 -> (((cellPx / d) - 22f) / 0.68f * d).toInt()
+            else -> (120 * d).toInt()
+        }
         h.img.scaleType = if (live) ImageView.ScaleType.FIT_CENTER else ImageView.ScaleType.CENTER_CROP
         val pad = if (live) (10 * d).toInt() else 0
         h.img.setPadding(pad, pad, pad, pad)

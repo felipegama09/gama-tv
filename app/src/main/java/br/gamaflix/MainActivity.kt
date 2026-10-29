@@ -53,12 +53,13 @@ class MainActivity : AppCompatActivity() {
         tvEmpty = findViewById(R.id.tvEmpty)
         progress = findViewById(R.id.progress)
 
-        grid = GridLayoutManager(this, cols())
+        grid = GridLayoutManager(this, 4)
         rvItems.layoutManager = grid
         rvItems.adapter = itemAdapter
         rvItems.setHasFixedSize(true)
         rvItems.itemAnimator = null
         rvItems.setItemViewCacheSize(8)
+        rvItems.post { applyGrid() }
 
         rvCats.layoutManager = LinearLayoutManager(this)
         rvCats.adapter = catAdapter
@@ -79,16 +80,21 @@ class MainActivity : AppCompatActivity() {
         val start = intent.getStringExtra("kind")?.let { Kind.valueOf(it) } ?: Kind.MOVIE
         Ui.bindTopBar(this, if (start == Kind.SERIES) R.id.navSeries else R.id.navMovies)
         select(start)
-        if (intent.getBooleanExtra("search", false)) askSearch()
     }
 
-    /** 5 colunas em TV; 2 em celular (tela estreita). */
-    private fun cols(): Int = if (resources.configuration.smallestScreenWidthDp < 600) 2 else 5
+    /** Colunas conforme a largura: no mínimo 4, para as capas ficarem pequenas. */
+    private fun applyGrid() {
+        val w = rvItems.width
+        if (w <= 0) return
+        val d = resources.displayMetrics.density
+        val cols = maxOf(4, (w / (150 * d)).toInt())
+        grid.spanCount = cols
+        itemAdapter.setCell(w / cols)
+    }
 
     private fun select(k: Kind) {
         kind = k
         query = ""
-        grid.spanCount = cols()
         itemAdapter.kind = k
 
         job?.cancel()
@@ -148,6 +154,7 @@ class MainActivity : AppCompatActivity() {
         val list = if (query.isEmpty()) base else base.filter { it.name.contains(query, ignoreCase = true) }
         itemAdapter.set(list)
         rvItems.scrollToPosition(0)
+        rvItems.post { applyGrid() }
         if (list.isEmpty()) {
             showEmpty(if (query.isEmpty()) "Nada por aqui." else "Nada encontrado para \"$query\".")
         } else {
@@ -165,19 +172,4 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent(this, DetailActivity::class.java))
     }
 
-    fun askSearch() {
-        val et = EditText(this)
-        et.setSingleLine()
-        et.hint = "Digite o nome"
-        et.setText(query)
-        AlertDialog.Builder(this, R.style.NovaDialog)
-            .setTitle("Buscar em ${if (kind == Kind.SERIES) "Séries" else "Filmes"}")
-            .setView(et)
-            .setPositiveButton("Buscar") { _, _ ->
-                query = et.text.toString().trim()
-                refreshItems()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
 }
