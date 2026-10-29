@@ -47,11 +47,6 @@
             android:screenOrientation="landscape" />
 
         <activity
-            android:name=".EpgActivity"
-            android:exported="false"
-            android:screenOrientation="landscape" />
-
-        <activity
             android:name=".PlayerActivity"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout|keyboard|navigation"
             android:exported="false"

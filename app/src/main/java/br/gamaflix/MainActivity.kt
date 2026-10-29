@@ -12,28 +12,24 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import coil.dispose
-import coil.load
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import android.widget.ImageView
 
-/** Filmes e Séries: menu lateral de categorias, grade de capas e painel com o item focado. */
+/** Filmes e Séries: menu lateral de categorias (com "Últimos") e grade de capas. */
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        /** Categoria virtual: os itens adicionados mais recentemente. */
+        const val RECENT = "__recent__"
+    }
 
     private lateinit var rvCats: RecyclerView
     private lateinit var rvItems: RecyclerView
     private lateinit var tvEmpty: TextView
     private lateinit var progress: View
-    private lateinit var ivFocus: ImageView
-    private lateinit var tvFocusTitle: TextView
-    private lateinit var tvFocusMeta: TextView
     private lateinit var grid: GridLayoutManager
-    private val itemAdapter = ItemAdapter(
-        onClick = { list, pos -> onItem(list, pos) },
-        onFocus = { item -> showFocus(item) }
-    )
+    private val itemAdapter = ItemAdapter(onClick = { list, pos -> onItem(list, pos) })
     private val catAdapter = CatAdapter { index, byClick -> rvCats.post { onCat(index, byClick) } }
 
     private var kind = Kind.MOVIE
@@ -56,11 +52,8 @@ class MainActivity : AppCompatActivity() {
         rvItems = findViewById(R.id.rvItems)
         tvEmpty = findViewById(R.id.tvEmpty)
         progress = findViewById(R.id.progress)
-        ivFocus = findViewById(R.id.ivFocus)
-        tvFocusTitle = findViewById(R.id.tvFocusTitle)
-        tvFocusMeta = findViewById(R.id.tvFocusMeta)
 
-        grid = GridLayoutManager(this, 5)
+        grid = GridLayoutManager(this, cols())
         rvItems.layoutManager = grid
         rvItems.adapter = itemAdapter
         rvItems.setHasFixedSize(true)
@@ -84,16 +77,18 @@ class MainActivity : AppCompatActivity() {
         })
 
         val start = intent.getStringExtra("kind")?.let { Kind.valueOf(it) } ?: Kind.MOVIE
-        kind = start
         Ui.bindTopBar(this, if (start == Kind.SERIES) R.id.navSeries else R.id.navMovies)
         select(start)
         if (intent.getBooleanExtra("search", false)) askSearch()
     }
 
+    /** 5 colunas em TV; 2 em celular (tela estreita). */
+    private fun cols(): Int = if (resources.configuration.smallestScreenWidthDp < 600) 2 else 5
+
     private fun select(k: Kind) {
         kind = k
         query = ""
-        grid.spanCount = 5
+        grid.spanCount = cols()
         itemAdapter.kind = k
 
         job?.cancel()
@@ -108,8 +103,10 @@ class MainActivity : AppCompatActivity() {
             try {
                 val c = Store.cache[k] ?: Store.source!!.load(k).also { Store.cache[k] = it }
                 catalog = c
-                cats = listOf(Cat("*", "Todos")) + c.cats.filter { c.byCat.containsKey(it.id) }
-                catIndex = if (cats.size > 1) 1 else 0
+                val recentName = if (k == Kind.SERIES) "Últimas séries" else "Últimos filmes"
+                cats = listOf(Cat("*", "Todos"), Cat(RECENT, recentName)) +
+                    c.cats.filter { c.byCat.containsKey(it.id) }
+                catIndex = 1 // abre em "Últimos"
                 catAdapter.setData(cats, catIndex)
                 refreshItems()
             } catch (e: CancellationException) {
@@ -131,13 +128,22 @@ class MainActivity : AppCompatActivity() {
         refreshItems()
     }
 
+    /** Itens mais recentes primeiro (pela data de adição do servidor). Sem data, usa o fim da lista. */
+    private fun recentItems(c: Catalog): List<Item> {
+        val dated = c.items.filter { it.added > 0 }.sortedByDescending { it.added }
+        val src = if (dated.isNotEmpty()) dated else c.items.asReversed()
+        return src.take(300)
+    }
+
     private fun refreshItems() {
         val c = catalog ?: return
         if (cats.isEmpty()) return
+        val id = cats[catIndex].id
         val base = when {
             query.isNotEmpty() -> c.items
-            cats[catIndex].id == "*" -> c.items
-            else -> c.byCat[cats[catIndex].id].orEmpty()
+            id == "*" -> c.items
+            id == RECENT -> recentItems(c)
+            else -> c.byCat[id].orEmpty()
         }
         val list = if (query.isEmpty()) base else base.filter { it.name.contains(query, ignoreCase = true) }
         itemAdapter.set(list)
@@ -146,24 +152,6 @@ class MainActivity : AppCompatActivity() {
             showEmpty(if (query.isEmpty()) "Nada por aqui." else "Nada encontrado para \"$query\".")
         } else {
             tvEmpty.visibility = View.GONE
-            showFocus(list[0])
-        }
-    }
-
-    /** Painel do topo: mostra o título e a capa do item que está em foco. */
-    private fun showFocus(item: Item) {
-        tvFocusTitle.text = item.name
-        tvFocusMeta.text = if (kind == Kind.SERIES) "Série" else "Filme"
-        val logo = item.logo
-        if (logo.isNullOrBlank()) {
-            ivFocus.dispose()
-            ivFocus.setImageResource(R.drawable.ph)
-        } else {
-            ivFocus.load(logo) {
-                size(240, 320)
-                placeholder(R.drawable.ph)
-                error(R.drawable.ph)
-            }
         }
     }
 

@@ -10,7 +10,7 @@
     <!-- Destaque: muda conforme o item focado -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="270dp">
+        android:layout_height="180dp">
 
         <ImageView
             android:id="@+id/heroBg"
@@ -46,7 +46,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="@color/text"
-                android:textSize="34sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -61,11 +61,21 @@
                 android:id="@+id/tvHeroPlot"
                 android:layout_width="620dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 android:ellipsize="end"
-                android:maxLines="3"
+                android:maxLines="2"
                 android:textColor="@color/text"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tvHeroNext"
+                android:layout_width="620dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/muted"
+                android:textSize="12sp" />
         </LinearLayout>
     </FrameLayout>
 

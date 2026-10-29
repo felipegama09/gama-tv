@@ -109,13 +109,13 @@ class XtreamSource(server: String, private val user: String, private val pass: S
                     val ext = o.str("container_extension").ifBlank { "mp4" }
                     items.add(
                         Item(id, name, o.str("stream_icon").ifBlank { null }, cat,
-                            "$base/movie/$u/$p/$id.$ext", kind)
+                            "$base/movie/$u/$p/$id.$ext", kind, null, o.str("added").toLongOrNull() ?: 0L)
                     )
                 }
                 Kind.SERIES -> {
                     val id = o.str("series_id")
                     items.add(
-                        Item(id, name, o.str("cover").ifBlank { null }, cat, null, kind, id)
+                        Item(id, name, o.str("cover").ifBlank { null }, cat, null, kind, id, o.str("last_modified").toLongOrNull() ?: 0L)
                     )
                 }
             }

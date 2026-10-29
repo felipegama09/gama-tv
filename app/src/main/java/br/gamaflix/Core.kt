@@ -14,7 +14,9 @@ data class Item(
     val cat: String,
     val url: String?,
     val kind: Kind,
-    val seriesId: String? = null
+    val seriesId: String? = null,
+    /** Data de adição no servidor (segundos desde 1970); 0 quando não informada. */
+    val added: Long = 0L
 )
 
 data class Ep(val title: String, val url: String)

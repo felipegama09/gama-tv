@@ -46,6 +46,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var tvHeroTitle: TextView
     private lateinit var tvHeroMeta: TextView
     private lateinit var tvHeroPlot: TextView
+    private lateinit var tvHeroNext: TextView
     private val rowAdapter = RowAdapter { card -> showHero(card) }
     private var job: Job? = null
     private var heroJob: Job? = null
@@ -68,6 +69,7 @@ class HomeActivity : AppCompatActivity() {
         tvHeroTitle = findViewById(R.id.tvHeroTitle)
         tvHeroMeta = findViewById(R.id.tvHeroMeta)
         tvHeroPlot = findViewById(R.id.tvHeroPlot)
+        tvHeroNext = findViewById(R.id.tvHeroNext)
         rvRows.layoutManager = LinearLayoutManager(this)
         rvRows.adapter = rowAdapter
         rvRows.itemAnimator = null
@@ -183,33 +185,44 @@ class HomeActivity : AppCompatActivity() {
             Kind.MOVIE -> "Filme"
             Kind.SERIES -> "Série"
         }
+        tvHeroNext.text = ""
         tvHeroPlot.text = "Carregando..."
         heroJob?.cancel()
         heroJob = lifecycleScope.launch {
             delay(350)
-            val result = try {
+            val hero = try {
                 loadHero(item)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Triple("Não foi possível carregar a sinopse.", "", null)
+                Hero("Não foi possível carregar a sinopse.", "", "", null)
             }
             if (heroKey != key) return@launch
-            tvHeroPlot.text = result.first.ifBlank { "Sinopse não disponível." }
-            if (result.second.isNotBlank()) tvHeroMeta.text = result.second
-            result.third?.takeIf { it.isNotBlank() }?.let { setHeroImage(it, key) }
+            tvHeroPlot.text = hero.plot.ifBlank { "Sinopse não disponível." }
+            if (hero.meta.isNotBlank()) tvHeroMeta.text = hero.meta
+            tvHeroNext.text = hero.next
+            hero.image?.takeIf { it.isNotBlank() }?.let { setHeroImage(it, key) }
         }
     }
 
-    /** Sinopse, metadados e imagem de fundo. Para canais, usa o programa atual do EPG. */
-    private suspend fun loadHero(item: Item): Triple<String, String, String?> {
+    private class Hero(val plot: String, val meta: String, val next: String, val image: String?)
+
+    /** Canais: programa atual e próximo do EPG. Filmes e séries: sinopse e ficha técnica. */
+    private suspend fun loadHero(item: Item): Hero {
         if (item.kind == Kind.LIVE) {
             val progs = Store.source?.epg(item) ?: emptyList()
             val t = System.currentTimeMillis() / 1000
             val now = progs.firstOrNull { t >= it.start && t < it.stop }
-            val plot = if (now == null) "Sem programação no momento." else now.desc.ifBlank { now.title }
-            val meta = if (now == null) "Canal ao vivo" else "Agora: ${now.title}"
-            return Triple(plot, meta, item.logo)
+            val next = progs.firstOrNull { it.start >= (now?.stop ?: t) }
+            val plot = when {
+                now == null -> "Sem programação no momento."
+                now.desc.isNotBlank() -> now.desc
+                else -> now.title
+            }
+            val meta = if (now == null) "Canal ao vivo"
+            else "AGORA  ·  ${now.title}  ·  ${hm(now.start)} – ${hm(now.stop)}"
+            val nextText = if (next == null) "" else "A SEGUIR  ·  ${next.title}  ·  ${hm(next.start)}"
+            return Hero(plot, meta, nextText, item.logo)
         }
         val key = "${item.kind}:${item.id}"
         val info = heroInfo[key] ?: Store.source!!.info(item).also { heroInfo[key] = it }
@@ -219,8 +232,11 @@ class HomeActivity : AppCompatActivity() {
             if (info.rating.isNotBlank()) "★ ${info.rating}" else "",
             info.genre
         ).filter { it.isNotBlank() }.joinToString("  •  ")
-        return Triple(info.plot, meta, info.backdrop ?: info.poster ?: item.logo)
+        return Hero(info.plot, meta, "", info.backdrop ?: info.poster ?: item.logo)
     }
+
+    private fun hm(sec: Long): String =
+        java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date(sec * 1000))
 
     /** Troca a imagem de fundo com transição suave. */
     private fun setHeroImage(url: String, key: String) {
@@ -396,12 +412,12 @@ class CardAdapter(
         val card = cards[i]
         val d = h.itemView.resources.displayMetrics.density
         val lp = RecyclerView.LayoutParams(
-            ((if (wide) 240 else 140) * d).toInt(),
+            ((if (wide) 200 else 120) * d).toInt(),
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
         lp.marginEnd = (12 * d).toInt()
         h.itemView.layoutParams = lp
-        h.img.layoutParams.height = ((if (wide) 135 else 200) * d).toInt()
+        h.img.layoutParams.height = ((if (wide) 112 else 170) * d).toInt()
         h.img.scaleType = ImageView.ScaleType.CENTER_CROP
         h.title.text = card.title
         h.sub.text = card.sub.orEmpty()

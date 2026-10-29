@@ -19,7 +19,7 @@ object Ui {
     /** Barra superior igual em todas as telas. `selected` é o id da aba atual. */
     fun bindTopBar(a: AppCompatActivity, selected: Int) {
         val pills = listOf(
-            R.id.navSearch, R.id.navHome, R.id.navLive, R.id.navEpg,
+            R.id.navSearch, R.id.navHome, R.id.navLive,
             R.id.navMovies, R.id.navSeries, R.id.navSettings
         )
         pills.forEach { id ->
@@ -38,9 +38,6 @@ object Ui {
         }
         a.findViewById<TextView>(R.id.navLive).setOnClickListener {
             if (selected != R.id.navLive) go(a, LiveActivity::class.java)
-        }
-        a.findViewById<TextView>(R.id.navEpg).setOnClickListener {
-            if (selected != R.id.navEpg) go(a, EpgActivity::class.java)
         }
         a.findViewById<TextView>(R.id.navMovies).setOnClickListener {
             if (selected != R.id.navMovies) go(a, MainActivity::class.java, Kind.MOVIE)
